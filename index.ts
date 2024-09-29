@@ -1,10 +1,13 @@
-const mineflayer = require("mineflayer")
+import 'dotenv/config'
+
+import mineflayer from 'mineflayer'
 const { pathfinder, Movements } = require("mineflayer-pathfinder")
 const Vec3 = require("vec3").Vec3
 const Item = require("prismarine-item")("1.20.1")
 const { Goal, GoalNear, GoalBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 const { parser } = require("mapartcraft-parser")
-const { goTo } = require("./pathfinder")
+import { goTo } from './pathfinder'
+import config from './config.json'
 
 function nearbyBlocks(pos, blocks) {
     var block = blocks.filter(element => element.pos.xzDistanceTo(pos) < settings.range);
@@ -17,14 +20,17 @@ var bot = mineflayer.createBot({
     version: "1.20.1",
     viewDistance: "tiny",
     auth: "microsoft",
-    profilesFolder: "profiles"
+    profilesFolder: "profiles",
+    username: process.env.ACCOUNT_EMAIL!,
+    password: process.env.ACCOUNT_PASSWORD!,
+    
 })
 
 
 const settings = {
     range: 4.5,
-    start: new Vec3(75712, 0, -89280),
-    end: new Vec3(75839, 0, -89153),
+    start: new Vec3(...config.StartBox),
+    end: new Vec3(...config.EndBox),
     moveBy: 1,
     moveRow: 8
 }
@@ -33,8 +39,9 @@ let nextPosition = new Vec3(settings.start.x, 0, settings.start.z)
 let currentPosition = new Vec3(0, 0, 0)
 
 
-let data = {
+let data: any = {
     row: 0,
+    startTime: undefined,
 }
 
 
@@ -44,9 +51,13 @@ bot.on("spawn", async () => {
     await goTo(bot, settings.start.offset(0, bot.player.entity.position.y, 0))
     data.startTime = Date.now()
 
-    const schematic = (await parser(__dirname + "/map.nbt")).simplify().filter(data => data.block !== "minecraft:none").map(({ block, x, z }) => {
-        return { pos: new Vec3(x + settings.start.x, bot.player.entity.position.y, z + settings.start.z - 1), block: block.replace("minecraft:", "") }
-    })
+    const schematic = (await parser(__dirname + "/map.nbt"))
+        .simplify()
+        .filter(data => 
+            data.block !== "minecraft:none" && data.block !== "minecraft:cobblestone")
+        .map(({ block, x, z }) => {
+            return { pos: new Vec3(x + settings.start.x, bot.player.entity.position.y, z + settings.start.z - 1), block: block.replace("minecraft:", "") }
+        })
 
     const blocks = [...new Set(schematic.map(a => a.block))]
     blocks.forEach(blockType => { // Console logs all necessary blocks
@@ -97,7 +108,7 @@ bot.on("spawn", async () => {
             if (blockExist?.name !== "air") continue;
 
 
-            if (refBlock.name == "dispenser") bot.setControlState("sneak", true);
+            if (refBlock?.name == "dispenser") bot.setControlState("sneak", true);
             
             var item = bot.inventory.items().find(item => item.name === nearbyBlock.block);
 
@@ -124,7 +135,7 @@ bot.on("spawn", async () => {
                 setTimeout(resolve, 50);
             });
 
-            await bot.placeBlock(refBlock, new Vec3(0, 1, 0)).catch((r) => console.log(r));
+            await bot.placeBlock(refBlock!, new Vec3(0, 1, 0)).catch((r) => console.log(r));
             bot.setControlState("sneak", false);
         }
 
@@ -140,7 +151,7 @@ bot.on("spawn", async () => {
 
 
 
-process.stdin.on("data", async (data) => {
+process.stdin.on("data", async (data: any) => {
     data = data.toString().trim()
 
     try {

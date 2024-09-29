@@ -1,17 +1,18 @@
 {
-    "Username": "JuzzyShop",
-    "ServerIP": "localhost",
+    "Username": "Maparting",
+    "ServerIP": "skyblock.net",
     "Range": 5,
     "SchematicName": "data.json",
     "blockDelay": 50,
-    "StartBox": {
-        "x": 0,
-        "y": 100,
-        "z": 0
-    },
-    "EndBox": {
-        "x": 128,
-        "y": 100,
-        "z": 128 
+    "StartBox": [75712, 201, -89280],
+    "EndBox": [75839, 0, -89153],
+    "ClearButton": [75842, 203, -89217],
+    "ClearButtonStanding": [75842 , 202, -89215],
+    "Chests": {
+        "Input": [
+            [75842, 206, -89195],
+            [75842, 205, -89195],
+            [75842, 204, -89195]
+        ]
     }
 }
