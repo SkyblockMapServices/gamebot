@@ -9,6 +9,8 @@ import { parser } from 'mapartcraft-parser'
 import { goTo } from './pathfinder'
 import config from './config.json'
 import { sleep } from './src/util'
+import { loader as autoEat } from 'mineflayer-auto-eat'
+import utilPlugin from '@nxg-org/mineflayer-util-plugin';
 
 const nearbyBlocks = (pos: any, blocks: any): any[] => {
     var block = blocks.filter(block => block.pos.xzDistanceTo(pos) < settings.range);
@@ -24,8 +26,13 @@ var bot = mineflayer.createBot({
     profilesFolder: "profiles",
     username: process.env.ACCOUNT_EMAIL!,
     password: process.env.ACCOUNT_PASSWORD!,
-    
 })
+
+const _bhp = bot.hasPlugin
+bot.hasPlugin = (plugin: mineflayer.Plugin) => {
+    if (!plugin) return true; // auto eat tries to load undefined
+    else return _bhp(plugin)
+}
 
 
 const settings = {
@@ -47,6 +54,9 @@ let data: any = {
 
 
 bot.on("spawn", async () => {
+    bot.loadPlugin(utilPlugin)
+    bot.loadPlugin(autoEat)
+    bot.autoEat.enableAuto()
     bot.chat("/visit JuzzyShop")
 
     await goTo(bot, settings.start.offset(0, bot.player.entity.position.y, 0))
@@ -110,8 +120,6 @@ bot.on("spawn", async () => {
 
 
             if (refBlock?.name == "dispenser") bot.setControlState("sneak", true);
-
-            console.log('nearbyblock: ' + nearbyBlock.block)
             
             var item = bot.inventory.items().find(item => item.name === nearbyBlock.block);
             
