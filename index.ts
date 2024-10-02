@@ -54,6 +54,7 @@ let data: any = {
 
 
 bot.on("spawn", async () => {
+    console.log('Spawned!')
     bot.loadPlugin(utilPlugin)
     bot.loadPlugin(autoEat)
     bot.autoEat.enableAuto()
