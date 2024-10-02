@@ -5,12 +5,13 @@ const { pathfinder, Movements } = require("mineflayer-pathfinder")
 const Vec3 = require("vec3").Vec3
 const Item = require("prismarine-item")("1.20.1")
 const { Goal, GoalNear, GoalBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
-const { parser } = require("mapartcraft-parser")
+import { parser } from 'mapartcraft-parser'
 import { goTo } from './pathfinder'
 import config from './config.json'
+import { sleep } from './src/util'
 
-function nearbyBlocks(pos, blocks) {
-    var block = blocks.filter(element => element.pos.xzDistanceTo(pos) < settings.range);
+const nearbyBlocks = (pos: any, blocks: any): any[] => {
+    var block = blocks.filter(block => block.pos.xzDistanceTo(pos) < settings.range);
     return block
 }
 
@@ -109,9 +110,11 @@ bot.on("spawn", async () => {
 
 
             if (refBlock?.name == "dispenser") bot.setControlState("sneak", true);
+
+            console.log('nearbyblock: ' + nearbyBlock.block)
             
             var item = bot.inventory.items().find(item => item.name === nearbyBlock.block);
-
+            
             if (!item) {
                 bot.setControlState("sneak", false);
                 continue;
@@ -131,8 +134,15 @@ bot.on("spawn", async () => {
             }
 
             await bot.equip(item, "hand");
-            await new Promise((resolve, reject) => {
-                setTimeout(resolve, 50);
+            await new Promise<void>(async (outerResolve, reject) => {
+                // setTimeout(resolve, 50);
+                const slot = bot.getEquipmentDestSlot('hand')
+                do {
+                    sleep(50)
+                } while (bot.inventory.slots[slot]?.stackId != item?.stackId) 
+                outerResolve()
+
+                
             });
 
             await bot.placeBlock(refBlock!, new Vec3(0, 1, 0)).catch((r) => console.log(r));
