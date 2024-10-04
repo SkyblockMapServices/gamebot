@@ -2,17 +2,21 @@ import 'dotenv/config'
 
 import mineflayer from 'mineflayer'
 const { pathfinder, Movements } = require("mineflayer-pathfinder")
-const Vec3 = require("vec3").Vec3
+import { Vec3 } from './node_modules/vec3/index'
 const Item = require("prismarine-item")("1.20.1")
 const { Goal, GoalNear, GoalBlock, GoalXZ, GoalY, GoalInvert, GoalFollow } = require('mineflayer-pathfinder').goals
 import { parser } from 'mapartcraft-parser'
 import { goTo } from './pathfinder'
 import config from './config.json'
-import { sleep } from './src/util'
+import { o, sleep } from './src/util'
 import { loader as autoEat } from 'mineflayer-auto-eat'
 import utilPlugin from '@nxg-org/mineflayer-util-plugin';
+import { announceMilestonePlacing } from './src/reporting'
 
-const nearbyBlocks = (pos: any, blocks: any): any[] => {
+const nearbyBlocks = (pos: any, blocks: any): {
+    pos: Vec3
+    block: string,
+}[] => {
     var block = blocks.filter(block => block.pos.xzDistanceTo(pos) < settings.range);
     return block
 }
@@ -37,7 +41,9 @@ bot.hasPlugin = (plugin: mineflayer.Plugin) => {
 
 const settings = {
     range: 4.5,
+    //@ts-ignore
     start: new Vec3(...config.StartBox),
+    //@ts-ignore
     end: new Vec3(...config.EndBox),
     moveBy: 1,
     moveRow: 8
@@ -52,6 +58,10 @@ let data: any = {
     startTime: undefined,
 }
 
+let blocksPlaced = {
+    count: 0,
+    coords: [] as [number, number, number][]
+}
 
 bot.on("spawn", async () => {
     console.log('Spawned!')
@@ -117,6 +127,19 @@ bot.on("spawn", async () => {
             const refBlock = bot.blockAt(nearbyBlock.pos.offset(0, -1, 0));
             const blockExist = bot.blockAt(nearbyBlock.pos);
 
+            blocksPlaced.count++
+            blocksPlaced.coords.push(nearbyBlock.pos.toArray())
+            if (blocksPlaced.count % 128 == 0) {
+                announceMilestonePlacing(blocksPlaced.count, blocksPlaced.coords, bot.inventory.slots.map(item => item == null ? null : 
+                    o({
+                        name: item.name,
+                        count: item.count,
+                    })
+                ))
+                blocksPlaced.coords = []
+                blocksPlaced.count = 0
+            }
+
             if (blockExist?.name !== "air") continue;
 
 
@@ -149,13 +172,14 @@ bot.on("spawn", async () => {
                 do {
                     sleep(50)
                 } while (bot.inventory.slots[slot]?.stackId != item?.stackId) 
-                outerResolve()
-
-                
+                outerResolve()                
             });
 
+            
             await bot.placeBlock(refBlock!, new Vec3(0, 1, 0)).catch((r) => console.log(r));
             bot.setControlState("sneak", false);
+
+            
         }
 
         

@@ -3,3 +3,5 @@ export const sleep = (ms: number) => {
         setTimeout(r, ms)
     })
 }
+
+export const o = <T = any>(v: T) => v
