@@ -127,18 +127,7 @@ bot.on("spawn", async () => {
             const refBlock = bot.blockAt(nearbyBlock.pos.offset(0, -1, 0));
             const blockExist = bot.blockAt(nearbyBlock.pos);
 
-            blocksPlaced.count++
-            blocksPlaced.coords.push(nearbyBlock.pos.toArray())
-            if (blocksPlaced.count % 128 == 0) {
-                announceMilestonePlacing(blocksPlaced.count, blocksPlaced.coords, bot.inventory.slots.map(item => item == null ? null : 
-                    o({
-                        name: item.name,
-                        count: item.count,
-                    })
-                ))
-                blocksPlaced.coords = []
-                blocksPlaced.count = 0
-            }
+            
 
             if (blockExist?.name !== "air") continue;
 
@@ -177,6 +166,20 @@ bot.on("spawn", async () => {
 
             
             await bot.placeBlock(refBlock!, new Vec3(0, 1, 0)).catch((r) => console.log(r));
+            blocksPlaced.count++
+            blocksPlaced.coords.push(nearbyBlock.pos.toArray())
+
+            if (blocksPlaced.count % 128 == 0) {
+                announceMilestonePlacing(blocksPlaced.count, blocksPlaced.coords, bot.inventory.slots.map(item => item == null ? null : 
+                    o({
+                        name: item.name,
+                        count: item.count,
+                    })
+                ))
+                blocksPlaced.coords = []
+                blocksPlaced.count = 0
+            }
+            
             bot.setControlState("sneak", false);
 
             
