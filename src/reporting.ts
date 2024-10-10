@@ -1,29 +1,34 @@
-import { request }from 'undici'
+import { request } from 'undici'
 import Logger from '../../discord-bot/src/Logger'
+import WebSocket from 'ws';
 export type SimpleReportedInventory = ({name: string, count: number} | null)[]
 
-export const URLs = {
-    placement: process.env.REPORTING_HOSTNAME + '/gamebot/report_placing_milestone'
-}
+export const ws = new WebSocket(`ws://${process.env.REPORTING_HOSTNAME}/game`, {
+    perMessageDeflate: false
+});
+export const key = process.env.GAME_BOT_KEY
 
 export const announceMilestonePlacing = (n: number, coords: [number, number, number][], inventory: SimpleReportedInventory) => {
-    const key = process.env.GAME_BOT_KEY
+    ws.send(JSON.stringify({
+        type: 'placing-milestone',
+        milestone: n,
+        coordsPlaced: coords,
+        inventory: inventory,
+        key: key,
+    }))
+}
 
-    request(URLs.placement, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            milestone: n,
-            coordsPlaced: coords,
-            inventory: inventory,
-            key: key,
-        }),
-    }).then(() => {
-        Logger.success('Reported placing milestone')
-    }).catch(e => {
-        Logger.warn('Failed to report placing milestone. ' + e.toString())
-    })
+export const announceInventory = (inventory: SimpleReportedInventory) => {
+    ws.send(JSON.stringify({
+        type: 'inventory',
+        inventory: inventory,
+        key: key,
+    }))
+}
 
+export const announceBotSpawning = () => {
+    ws.send(JSON.stringify({
+        type: 'bot-spawned',
+        key: key,
+    }))
 }

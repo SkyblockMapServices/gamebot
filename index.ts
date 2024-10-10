@@ -11,7 +11,7 @@ import config from './config.json'
 import { o, sleep } from './src/util'
 import { loader as autoEat } from 'mineflayer-auto-eat'
 import utilPlugin from '@nxg-org/mineflayer-util-plugin';
-import { announceMilestonePlacing } from './src/reporting'
+import * as reporting from './src/reporting'
 
 const nearbyBlocks = (pos: any, blocks: any): {
     pos: Vec3
@@ -65,10 +65,20 @@ let blocksPlaced = {
 
 bot.on("spawn", async () => {
     console.log('Spawned!')
+    reporting.announceBotSpawning()
+    
     bot.loadPlugin(utilPlugin)
     bot.loadPlugin(autoEat)
     bot.autoEat.enableAuto()
+    
     bot.chat("/visit JuzzyShop")
+
+    reporting.announceInventory(bot.inventory.slots.map(item => item == null ? null : 
+        o({
+            name: item.name,
+            count: item.count,
+        })
+    ))
 
     await goTo(bot, settings.start.offset(0, bot.player.entity.position.y, 0))
     data.startTime = Date.now()
@@ -170,12 +180,14 @@ bot.on("spawn", async () => {
             blocksPlaced.coords.push(nearbyBlock.pos.toArray())
 
             if (blocksPlaced.count % 128 == 0) {
-                announceMilestonePlacing(blocksPlaced.count, blocksPlaced.coords, bot.inventory.slots.map(item => item == null ? null : 
+                reporting.announceMilestonePlacing(blocksPlaced.count, blocksPlaced.coords, bot.inventory.slots.map(item => item == null ? null : 
                     o({
                         name: item.name,
                         count: item.count,
                     })
                 ))
+
+                
                 blocksPlaced.coords = []
                 blocksPlaced.count = 0
             }
