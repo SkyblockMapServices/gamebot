@@ -6,6 +6,11 @@ export type SimpleReportedInventory = ({name: string, count: number} | null)[]
 export const ws = new WebSocket(`ws://${process.env.REPORTING_HOSTNAME}/game`, {
     perMessageDeflate: false
 });
+
+ws.on('error', (error: Error) => {
+    Logger.error('Websocket received error: ' + error.toString())
+})
+
 export const key = process.env.GAME_BOT_KEY
 
 export const announceMilestonePlacing = (n: number, coords: [number, number, number][], inventory: SimpleReportedInventory) => {
