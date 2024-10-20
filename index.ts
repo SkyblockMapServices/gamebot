@@ -63,6 +63,13 @@ let blocksPlaced = {
     coords: [] as [number, number, number][]
 }
 
+bot.on('error', console.error)
+
+//@ts-ignore
+bot.on('kicked', (...r) => {
+    console.error('kicked: ' + r)
+})
+
 bot.on("spawn", async () => {
     console.log('Spawned!')
     reporting.announceBotSpawning()
@@ -203,8 +210,9 @@ bot.on("spawn", async () => {
     console.log(`Done at ${Date.now()}\n${Date.now() - data.startTime}ms elapsed.`);
 });
 
-
-
+export const messageUser = (ign: string, content: string) => {
+    bot.chat(`/msg ${ign} ${content}`)
+}
 
 
 
